@@ -144,11 +144,11 @@ function _bound_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}
     fixed_one = _local_fix1_indices(keep, F1)
     x0 = _initial_relaxation_point(length(keep), k, fixed_one)
 
-    x = Vector{Float64}(barzilai_borwein(A_reduced, k, x0, fixed_one, eps, proj_eps, step_size))
+    x = barzilai_borwein(A_reduced, k, x0, fixed_one, eps, proj_eps, step_size)
 
     length(x) == length(keep) || error("barzilai_borwein returned a vector with the wrong length.")
 
-    Lambda, tau, mu, nu = construct_dual(A_reduced, x, k)
+    Lambda, tau, mu, nu = construct_dual(A_reduced, x, k, fixed_one)
 
     mu = Vector{Float64}(mu)
     nu = Vector{Float64}(nu)
@@ -156,7 +156,7 @@ function _bound_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}
     length(mu) == length(keep) || error("construct_dual returned mu with the wrong length.")
     length(nu) == length(keep) || error("construct_dual returned nu with the wrong length.")
 
-    lb = Float64(dual_objective(Lambda, tau, mu, nu, k) + sum(mu[fixed_one]))
+    lb = dual_objective(Lambda, tau, mu, nu, k) + sum(mu[fixed_one])
 
     isfinite(lb) || error("The dual lower bound is not finite.")
 
@@ -166,7 +166,7 @@ function _bound_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}
         x=x,
         keep=keep,
         Lambda=Lambda,
-        tau=Float64(tau),
+        tau=tau,
         mu=mu,
         nu=nu,
     )
@@ -176,16 +176,15 @@ function _dual_fixing(F1::Vector{Int}, F0::Vector{Int}, r, k::Int, UB::Float64)
     fixed_one = _local_fix1_indices(r.keep, F1)
     free = setdiff(collect(eachindex(r.keep)), fixed_one)
 
-    adjusted_UB = UB - sum(r.mu[fixed_one])
+    node_correction = sum(r.mu[fixed_one])
+    adjusted_UB = UB - node_correction
+
     candidate_fix0, candidate_fix1 = dual_variable_fixing(adjusted_UB, r.Lambda, r.tau, r.mu, r.nu, k)
 
     local_fix0 = sort(unique(intersect(Int.(candidate_fix0), free)))
     local_fix1 = sort(unique(intersect(Int.(candidate_fix1), free)))
 
-    valid_local = Set(eachindex(r.keep))
-    all(index -> index in valid_local, local_fix0) || error("dual_variable_fixing returned an invalid local index.")
-    all(index -> index in valid_local, local_fix1) || error("dual_variable_fixing returned an invalid local index.")
-    isempty(intersect(local_fix0, local_fix1)) || error("dual_variable_fixing fixed the same variable to zero and one.")
+    isempty(intersect(local_fix0, local_fix1)) || error("Dual fixing fixed the same variable to zero and one.")
 
     global_fix0 = r.keep[local_fix0]
     global_fix1 = r.keep[local_fix1]
@@ -199,19 +198,8 @@ end
 function _primal_fixing(F1::Vector{Int}, F0::Vector{Int}, r, A::AbstractMatrix, k::Int, UB::Float64)
     fixed_one = _local_fix1_indices(r.keep, F1)
 
-    if !isempty(fixed_one)
-        return sort(unique(F1)), sort(unique(F0))
-    end
+    local_fix0, local_fix1 = primal_variable_fixing(UB, r.x, A[:, r.keep], k, fixed_one)
 
-    free = collect(eachindex(r.keep))
-    candidate_fix0, candidate_fix1 = primal_variable_fixing(UB, r.x, A[:, r.keep], k)
-
-    local_fix0 = sort(unique(intersect(Int.(candidate_fix0), free)))
-    local_fix1 = sort(unique(intersect(Int.(candidate_fix1), free)))
-
-    valid_local = Set(eachindex(r.keep))
-    all(index -> index in valid_local, local_fix0) || error("primal_variable_fixing returned an invalid local index.")
-    all(index -> index in valid_local, local_fix1) || error("primal_variable_fixing returned an invalid local index.")
     isempty(intersect(local_fix0, local_fix1)) || error("primal_variable_fixing fixed the same variable to zero and one.")
 
     global_fix0 = r.keep[local_fix0]

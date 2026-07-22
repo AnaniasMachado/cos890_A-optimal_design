@@ -74,10 +74,13 @@ function _solve_and_fix_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vec
         added_fix1 = length(F1_new) - length(F1_current)
         added_fix0 = length(F0_new) - length(F0_current)
 
+        added_fix1 >= 0 || error("The number of variables fixed to one decreased.")
+        added_fix0 >= 0 || error("The number of variables fixed to zero decreased.")
+
         counters[] = (
             nodes=counters[].nodes,
-            nfix0=counters[].nfix0 + max(added_fix0, 0),
-            nfix1=counters[].nfix1 + max(added_fix1, 0),
+            nfix0=counters[].nfix0 + added_fix0,
+            nfix1=counters[].nfix1 + added_fix1,
         )
 
         F1_current = F1_new
@@ -120,8 +123,6 @@ function solve_bnb(A::AbstractMatrix, k::Int; fixing_rule::Symbol=:none, time_li
     fixing_rule = _normalize_fixing_rule(fixing_rule)
 
     greedy_x, greedy_value = greedy(A, k)
-    greedy_x = Vector{Float64}(greedy_x)
-    greedy_value = Float64(greedy_value)
 
     length(greedy_x) == n || error("greedy returned a vector with the wrong length.")
     isfinite(greedy_value) || error("greedy returned a non-finite objective value.")
