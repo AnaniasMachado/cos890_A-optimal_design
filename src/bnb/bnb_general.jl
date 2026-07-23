@@ -32,6 +32,7 @@ end
 
 function _push_node!(open, F1::Vector{Int}, F0::Vector{Int}, r, UB::Float64, depth::Int, tol::Float64)
     r.determined && return false
+    r.infeasible && return false
     _is_integer_point(r.x, tol) && return false
     r.lb >= UB - tol && return false
 
@@ -57,6 +58,8 @@ function _solve_and_fix_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vec
 
         r = merge(r_raw, (lb=max(inherited_lb, r_raw.lb),))
         inherited_lb = r.lb
+
+        r.infeasible && return F1_current, F0_current, r
 
         _update_incumbent!(state, A, k, F1_current, r, tol)
 

@@ -1,0 +1,6 @@
+longitudinal_position
+prismatic_coefficient
+length_displacement_ratio
+beam_draught_ratio
+length_beam_ratio
+froude_number

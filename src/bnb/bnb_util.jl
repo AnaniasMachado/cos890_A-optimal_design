@@ -120,6 +120,7 @@ function _determined_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector
 
     return (
         determined=true,
+        infeasible=false,
         lb=value,
         x=x,
         keep=keep,
@@ -135,6 +136,20 @@ function _bound_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}
     F1 = sort(unique(F1))
     F0 = sort(unique(F0))
     keep = setdiff(collect(1:n), F0)
+
+    if length(F1) > k || length(keep) < k
+        return (
+            determined=false,
+            infeasible=true,
+            lb=Inf,
+            x=Float64[],
+            keep=keep,
+            Lambda=nothing,
+            tau=NaN,
+            mu=Float64[],
+            nu=Float64[],
+        )
+    end
 
     if length(F1) == k || length(keep) == k
         return _determined_node(A, k, F1, F0)
@@ -162,6 +177,7 @@ function _bound_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}
 
     return (
         determined=false,
+        infeasible=false,
         lb=lb,
         x=x,
         keep=keep,
@@ -223,8 +239,6 @@ function _apply_variable_fixing(F1::Vector{Int}, F0::Vector{Int}, r, A::Abstract
     end
 
     isempty(intersect(F1_new, F0_new)) || error("Variable fixing produced overlapping F0 and F1.")
-    length(F1_new) <= k || error("Variable fixing fixed more than k variables to one.")
-    size(A,2) - length(F0_new) >= k || error("Variable fixing removed too many variables.")
 
     return F1_new, F0_new
 end

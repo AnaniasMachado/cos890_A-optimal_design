@@ -1,0 +1,5 @@
+frequency
+attack_angle
+chord_length
+free_stream_velocity
+displacement_thickness
