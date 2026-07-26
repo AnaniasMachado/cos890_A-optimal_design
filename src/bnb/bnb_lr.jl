@@ -83,7 +83,7 @@ function _lr_step_size(step_rule::Symbol, alpha0::Float64, iteration::Int, lr_va
     end
 end
 
-function _solve_lr_node(A::AbstractMatrix, k::Int, fixed_one::Vector{Int}, deadline::Float64; iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, Lambda0=nothing)
+function _solve_lr_node(A::AbstractMatrix, k::Int, fixed_one::Vector{Int}, deadline::Float64, polyak_UB::Float64; iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, Lambda0=nothing)
     iter_lr >= 1 || error("iter_lr must be at least 1.")
     alpha0 > 0.0 || error("alpha0 must be positive.")
     inverse_eps > 0.0 || error("inverse_eps must be positive.")
@@ -140,8 +140,8 @@ function _solve_lr_node(A::AbstractMatrix, k::Int, fixed_one::Vector{Int}, deadl
 
         norm_H <= eps(Float64) && break
 
-        node_UB = lr_step_rule == :polyak ? _lr_feasible_value(A, selected) : Inf
-        alpha = _lr_step_size(lr_step_rule, alpha0, iteration, value, node_UB, norm_H)
+        step_UB = lr_step_rule == :polyak ? polyak_UB : Inf
+        alpha = _lr_step_size(lr_step_rule, alpha0, iteration, value, step_UB, norm_H)
 
         alpha > 0.0 || continue
 
@@ -171,7 +171,7 @@ function _solve_lr_node(A::AbstractMatrix, k::Int, fixed_one::Vector{Int}, deadl
     )
 end
 
-function _bound_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, deadline::Float64; iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, Lambda0=nothing)
+function _bound_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, deadline::Float64, polyak_UB::Float64; iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, Lambda0=nothing)    
     n = size(A, 2)
 
     F1 = sort(unique(F1))
@@ -228,7 +228,7 @@ function _bound_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{I
         node_Lambda0 = Lambda0
     end
 
-    lr = _solve_lr_node(A_reduced, k, fixed_one, deadline; iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, Lambda0=node_Lambda0)
+    lr = _solve_lr_node(A_reduced, k, fixed_one, deadline, polyak_UB; iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, Lambda0=node_Lambda0)
 
     length(lr.x) == length(keep) || error("The LR solution has the wrong length.")
     length(lr.coefficients) == length(keep) || error("The LR coefficient vector has the wrong length.")
@@ -297,7 +297,7 @@ function _update_incumbent_lr!(state::Base.RefValue, A::AbstractMatrix, k::Int, 
     return _update_incumbent!(state, A, k, F1, r, tol)
 end
 
-function _solve_and_fix_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent_lb::Float64, parent_Lambda, state::Base.RefValue, counters::Base.RefValue, deadline::Float64; fixing_rule::Symbol, resolve::Int, iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, tol::Float64)
+function _solve_and_fix_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent_lb::Float64, parent_Lambda, state::Base.RefValue, counters::Base.RefValue, deadline::Float64, polyak_UB::Float64; fixing_rule::Symbol, resolve::Int, iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, tol::Float64)    
     resolve >= 1 || error("resolve must be at least 1.")
 
     F1_current = sort(unique(copy(F1)))
@@ -310,7 +310,7 @@ function _solve_and_fix_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::
     while true
         nresolve += 1
 
-        r_raw = _bound_node_lr(A, k, F1_current, F0_current, deadline; iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, Lambda0=Lambda_start)
+        r_raw = _bound_node_lr(A, k, F1_current, F0_current, deadline, polyak_UB; iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, Lambda0=Lambda_start)
 
         counters[] = (
             nodes=counters[].nodes + 1,
@@ -355,7 +355,7 @@ function _solve_and_fix_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::
         F0_current = F0_new
 
         if nresolve >= resolve
-            r_raw = _bound_node_lr(A, k, F1_current, F0_current, deadline; iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, Lambda0=Lambda_start)
+            r_raw = _bound_node_lr(A, k, F1_current, F0_current, deadline, polyak_UB; iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, Lambda0=Lambda_start)
 
             counters[] = (
                 nodes=counters[].nodes + 1,
@@ -375,8 +375,8 @@ function _solve_and_fix_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::
     end
 end
 
-function _process_child_lr!(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent::AOPTNode, parent_Lambda, open, multipliers, state::Base.RefValue, counters::Base.RefValue, deadline::Float64; fixing_rule::Symbol, resolve::Int, iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, tol::Float64)
-    F1_final, F0_final, r = _solve_and_fix_node_lr(A, k, F1, F0, parent.lb, parent_Lambda, state, counters, deadline; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
+function _process_child_lr!(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent::AOPTNode, parent_Lambda, open, multipliers, state::Base.RefValue, counters::Base.RefValue, deadline::Float64, polyak_UB::Float64; fixing_rule::Symbol, resolve::Int, iter_lr::Int, lr_step_rule::Symbol, alpha0::Float64, inverse_eps::Float64, tol::Float64)    
+    F1_final, F0_final, r = _solve_and_fix_node_lr(A, k, F1, F0, parent.lb, parent_Lambda, state, counters, deadline, polyak_UB; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
 
     if !r.determined && !r.infeasible && r.lb < state[].UB - tol
         node = AOPTNode(copy(F1_final), copy(F0_final), r.lb, copy(r.coefficients), copy(r.keep), parent.depth + 1)
@@ -434,7 +434,7 @@ function solve_bnb_lr(A::AbstractMatrix, k::Int; iter_lr::Int=500, lr_step_rule:
     open = BinaryMinHeap{AOPTNode}()
     multipliers = IdDict{AOPTNode,Any}()
 
-    root_F1, root_F0, root_result = _solve_and_fix_node_lr(A, k, Int[], Int[], -Inf, nothing, state, counters, deadline; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
+    root_F1, root_F0, root_result = _solve_and_fix_node_lr(A, k, Int[], Int[], -Inf, nothing, state, counters, deadline, greedy_value; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
 
     root_lb = root_result.lb
 
@@ -465,7 +465,7 @@ function solve_bnb_lr(A::AbstractMatrix, k::Int; iter_lr::Int=500, lr_step_rule:
 
         F1_child = sort(unique(vcat(node.F1, branch_index)))
 
-        _process_child_lr!(A, k, F1_child, node.F0, node, parent_Lambda, open, multipliers, state, counters, deadline; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
+        _process_child_lr!(A, k, F1_child, node.F0, node, parent_Lambda, open, multipliers, state, counters, deadline, greedy_value; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
 
         if time() >= deadline
             time_limit_hit = true
@@ -474,7 +474,7 @@ function solve_bnb_lr(A::AbstractMatrix, k::Int; iter_lr::Int=500, lr_step_rule:
 
         F0_child = sort(unique(vcat(node.F0, branch_index)))
 
-        _process_child_lr!(A, k, node.F1, F0_child, node, parent_Lambda, open, multipliers, state, counters, deadline; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
+        _process_child_lr!(A, k, node.F1, F0_child, node, parent_Lambda, open, multipliers, state, counters, deadline, greedy_value; fixing_rule=fixing_rule, resolve=resolve, iter_lr=iter_lr, lr_step_rule=lr_step_rule, alpha0=alpha0, inverse_eps=inverse_eps, tol=tol)
 
         if verbose && counters[].nodes >= next_report
             _print_progress_lr(counters[].nodes, counters[].lr_iterations, open, counters[].nfix0, counters[].nfix1, state[].UB)

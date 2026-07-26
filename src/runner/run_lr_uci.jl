@@ -15,6 +15,8 @@ include("../bnb/bnb_util.jl")
 include("../bnb/bnb_general.jl")
 include("../bnb/bnb_lr.jl")
 
+Random.seed!(1)
+
 instance = "airfoil_normalized"
 
 A = Matrix{Float64}(readdlm(
