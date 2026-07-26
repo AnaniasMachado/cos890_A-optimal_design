@@ -4,6 +4,7 @@ using Printf
 
 include("../methods/projection.jl")
 include("../methods/barzilai_borwein.jl")
+include("../methods/solver.jl")
 
 include("../misc/util.jl")
 include("../misc/heuristic.jl")

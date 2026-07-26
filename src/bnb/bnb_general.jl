@@ -42,12 +42,18 @@ function _push_node!(open, F1::Vector{Int}, F0::Vector{Int}, r, UB::Float64, dep
     return true
 end
 
-function _solve_and_fix_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent_lb::Float64, state::Base.RefValue, counters::Base.RefValue; fixing_rule::Symbol, eps::Float64, proj_eps::Float64, step_size::String, tol::Float64)
+function _solve_and_fix_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent_lb::Float64, state::Base.RefValue, counters::Base.RefValue; fixing_rule::Symbol, resolve::Int, eps::Float64, proj_eps::Float64, step_size::String, tol::Float64)
+    resolve >= 1 || error("resolve must be at least 1.")
+    
     F1_current = sort(unique(copy(F1)))
     F0_current = sort(unique(copy(F0)))
     inherited_lb = parent_lb
 
+    nresolve = 0
+
     while true
+        nresolve += 1
+
         r_raw = _bound_node(A, k, F1_current, F0_current; eps=eps, proj_eps=proj_eps, step_size=step_size)
 
         counters[] = (
@@ -86,13 +92,18 @@ function _solve_and_fix_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vec
             nfix1=counters[].nfix1 + added_fix1,
         )
 
+        # stop resolving if the limit is reached
+        if nresolve >= resolve
+            return F1_new, F0_new, r
+        end
+
         F1_current = F1_new
         F0_current = F0_new
     end
 end
 
-function _process_child!(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent::AOPTNode, open, state::Base.RefValue, counters::Base.RefValue; fixing_rule::Symbol, eps::Float64, proj_eps::Float64, step_size::String, tol::Float64)
-    F1_final, F0_final, r = _solve_and_fix_node(A, k, F1, F0, parent.lb, state, counters; fixing_rule=fixing_rule, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
+function _process_child!(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent::AOPTNode, open, state::Base.RefValue, counters::Base.RefValue; fixing_rule::Symbol, resolve::Int, eps::Float64, proj_eps::Float64, step_size::String, tol::Float64)
+    F1_final, F0_final, r = _solve_and_fix_node(A, k, F1, F0, parent.lb, state, counters; fixing_rule=fixing_rule, resolve=resolve, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
 
     _push_node!(open, F1_final, F0_final, r, state[].UB, parent.depth + 1, tol)
 
@@ -115,7 +126,7 @@ function _print_final(status::String, fixing_rule::Symbol, nodes::Int, open_coun
     flush(stdout)
 end
 
-function solve_bnb(A::AbstractMatrix, k::Int; fixing_rule::Symbol=:none, time_limit::Real=3600.0, verbose::Bool=true, eps::Float64=1e-6, proj_eps::Float64=1e-12, step_size::String="BB1", tol::Float64=1e-6, report_every::Int=1000)
+function solve_bnb(A::AbstractMatrix, k::Int; fixing_rule::Symbol=:none, resolve::Int=1, time_limit::Real=3600.0, verbose::Bool=true, eps::Float64=1e-6, proj_eps::Float64=1e-12, step_size::String="BB1", tol::Float64=1e-6, report_every::Int=1000)
     start_time = time()
     n = size(A, 2)
 
@@ -134,7 +145,7 @@ function solve_bnb(A::AbstractMatrix, k::Int; fixing_rule::Symbol=:none, time_li
     counters = Ref((nodes=0, nfix0=0, nfix1=0))
     open = BinaryMinHeap{AOPTNode}()
 
-    root_F1, root_F0, root_result = _solve_and_fix_node(A, k, Int[], Int[], -Inf, state, counters; fixing_rule=fixing_rule, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
+    root_F1, root_F0, root_result = _solve_and_fix_node(A, k, Int[], Int[], -Inf, state, counters; fixing_rule=fixing_rule, resolve=resolve, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
 
     root_lb = root_result.lb
     verbose && _print_root(fixing_rule, state[].UB, min(state[].UB, root_lb))
@@ -158,7 +169,7 @@ function solve_bnb(A::AbstractMatrix, k::Int; fixing_rule::Symbol=:none, time_li
         branch_index == 0 && continue
 
         F1_child = sort(vcat(node.F1, branch_index))
-        _process_child!(A, k, F1_child, node.F0, node, open, state, counters; fixing_rule=fixing_rule, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
+        _process_child!(A, k, F1_child, node.F0, node, open, state, counters; fixing_rule=fixing_rule, resolve=resolve, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
 
         if time() - start_time >= time_limit
             time_limit_hit = true
@@ -166,7 +177,7 @@ function solve_bnb(A::AbstractMatrix, k::Int; fixing_rule::Symbol=:none, time_li
         end
 
         F0_child = sort(vcat(node.F0, branch_index))
-        _process_child!(A, k, node.F1, F0_child, node, open, state, counters; fixing_rule=fixing_rule, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
+        _process_child!(A, k, node.F1, F0_child, node, open, state, counters; fixing_rule=fixing_rule, resolve=resolve, eps=eps, proj_eps=proj_eps, step_size=step_size, tol=tol)
 
         if verbose && counters[].nodes >= next_report
             _print_progress(counters[].nodes, open, counters[].nfix0, counters[].nfix1, state[].UB)

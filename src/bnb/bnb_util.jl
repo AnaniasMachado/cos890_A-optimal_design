@@ -159,7 +159,8 @@ function _bound_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}
     fixed_one = _local_fix1_indices(keep, F1)
     x0 = _initial_relaxation_point(length(keep), k, fixed_one)
 
-    x = barzilai_borwein(A_reduced, k, x0, fixed_one, eps, proj_eps, step_size)
+    # x = barzilai_borwein(A_reduced, k, x0, fixed_one, eps, proj_eps, step_size)
+    x = continuous_relaxation(A_reduced, k, fixed_one; x0=x0, tol=eps)
 
     length(x) == length(keep) || error("barzilai_borwein returned a vector with the wrong length.")
 
