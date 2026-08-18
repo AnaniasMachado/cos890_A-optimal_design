@@ -17,7 +17,7 @@ include("../bnb/bnb_general.jl")
 
 Random.seed!(1)
 
-instance = "airfoil_normalized"
+instance = "airfoil_raw"
 
 A = Matrix{Float64}(readdlm(
     "data/aopt_matrices/A_$(instance).csv",

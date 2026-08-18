@@ -44,7 +44,7 @@ end
 
 function _solve_and_fix_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{Int}, parent_lb::Float64, state::Base.RefValue, counters::Base.RefValue; fixing_rule::Symbol, resolve::Int, eps::Float64, proj_eps::Float64, step_size::String, tol::Float64)
     resolve >= 1 || error("resolve must be at least 1.")
-    
+
     F1_current = sort(unique(copy(F1)))
     F0_current = sort(unique(copy(F0)))
     inherited_lb = parent_lb
@@ -92,8 +92,21 @@ function _solve_and_fix_node(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vec
             nfix1=counters[].nfix1 + added_fix1,
         )
 
-        # stop resolving if the limit is reached
         if nresolve >= resolve
+            r_raw = _bound_node(A, k, F1_new, F0_new; eps=eps, proj_eps=proj_eps, step_size=step_size)
+
+            counters[] = (
+                nodes=counters[].nodes + 1,
+                nfix0=counters[].nfix0,
+                nfix1=counters[].nfix1,
+            )
+
+            r = merge(r_raw, (lb=max(inherited_lb, r_raw.lb),))
+
+            r.infeasible && return F1_new, F0_new, r
+
+            _update_incumbent!(state, A, k, F1_new, r, tol)
+
             return F1_new, F0_new, r
         end
 

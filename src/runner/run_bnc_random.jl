@@ -12,8 +12,7 @@ include("../misc/dual.jl")
 include("../misc/var_fixing.jl")
 
 include("../bnb/bnb_util.jl")
-include("../bnb/bnb_general.jl")
-include("../bnb/bnb_lr.jl")
+include("../bnb/bnc.jl")
 
 Random.seed!(1)
 
@@ -24,19 +23,14 @@ k = 30
 A = randn(m, n)
 
 runtime = @elapsed begin
-    x_best, stats = solve_bnb_lr(A, k;
-        iter_lr=50, lr_step_rule=:polyak, alpha0=0.1,
-        fixing_rule=:dual, verbose=false)
+    x_best, stats = solve_bnc(A, k; fixing_rule=:dual, max_cuts=20, verbose=false)
 end
 
 objective_value = objective(information_matrix(x_best, A))
 
-println("AOPT LR branch-and-bound results")
-println("--------------------------------")
+println("AOPT branch-and-cut results")
+println("---------------------------")
 @printf("fixing rule       : %s\n", String(stats.fixing_rule))
-@printf("LR step rule      : %s\n", String(stats.lr_step_rule))
-@printf("LR iterations/node: %d\n", stats.iter_lr)
-@printf("LR alpha0         : %.6f\n", stats.alpha0)
 @printf("status            : %s\n", stats.status)
 @printf("runtime           : %.6f seconds\n", runtime)
 @printf("solver wall time  : %.6f seconds\n", stats.wall_time)
@@ -47,7 +41,7 @@ println("--------------------------------")
 @printf("root lower bound  : %.10f\n", stats.root_LB)
 @printf("nodes processed   : %d\n", stats.nodes)
 @printf("open nodes        : %d\n", stats.open_nodes)
-@printf("total LR iterations: %d\n", stats.lr_iterations)
+@printf("cuts generated    : %d\n", stats.ncuts)
 @printf("fixed to zero     : %d\n", stats.nfix0)
 @printf("fixed to one      : %d\n", stats.nfix1)
 @printf("time limit hit    : %s\n", string(stats.time_limit_hit))
