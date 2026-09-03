@@ -1,5 +1,8 @@
 using JuMP
-import Ipopt
+using Ipopt
+using Hypatia
+
+const MOI = JuMP.MOI
 
 function continuous_relaxation(A::AbstractMatrix, k::Integer, fixed_one::AbstractVector{<:Integer}; x0=nothing, tol=1e-8)
     n = size(A, 2)
@@ -111,6 +114,16 @@ function continuous_relaxation_with_conflict_cuts(A::AbstractMatrix, k::Integer,
         return nothing
     end
 
+    if status == MOI.NUMERICAL_ERROR
+        return continuous_relaxation(
+            A,
+            k,
+            fixed_one;
+            x0=x0,
+            tol=tol,
+        )
+    end
+
     status in (
         MOI.OPTIMAL,
         MOI.LOCALLY_SOLVED,
@@ -119,4 +132,65 @@ function continuous_relaxation_with_conflict_cuts(A::AbstractMatrix, k::Integer,
     ) || error("Relaxation was not solved successfully. Status: $status")
 
     return Vector{Float64}(value.(x))
+end
+
+function solve_lr_sdp(A::AbstractMatrix, k::Int, fixed_one::Vector{Int}; tol::Float64=1e-6, time_limit::Real=60.0)
+    m, n = size(A)
+
+    tol > 0.0 || error("tol must be positive.")
+    time_limit > 0.0 || error("time_limit must be positive.")
+
+    fixed_one = sort(unique(fixed_one))
+
+    fixed_mask = falses(n)
+    fixed_mask[fixed_one] .= true
+    free = findall(!, fixed_mask)
+
+    remaining = k - length(fixed_one)
+
+    1 <= remaining < length(free) || error("The nontrivial LR SDP must satisfy 1 <= remaining < number of free variables.")
+
+    model = Model(() -> Hypatia.Optimizer(
+        verbose=false,
+        tol_rel_opt=tol,
+        tol_abs_opt=tol,
+    ))
+
+    set_time_limit_sec(model, Float64(time_limit))
+
+    @variable(model, Lambda[1:m, 1:m], Symmetric)
+    @variable(model, W[1:m, 1:m], Symmetric)
+    @variable(model, tau)
+    @variable(model, s[free] >= 0.0)
+
+    @expression(model, q[i=1:n], sum(A[r, i] * A[c, i] * Lambda[r, c] for r in 1:m, c in 1:m))
+
+    for i in free
+        @constraint(model, s[i] >= q[i] - tau)
+    end
+
+    identity_matrix = Matrix{Float64}(I, m, m)
+
+    @constraint(model, [Lambda W; W identity_matrix] in PSDCone())
+
+    fixed_term = isempty(fixed_one) ? 0.0 : sum(q[i] for i in fixed_one)
+    free_slack_term = sum(s[i] for i in free)
+
+    @objective(model, Max, 2.0 * sum(W[j, j] for j in 1:m) - fixed_term - remaining * tau - free_slack_term)
+
+    optimize!(model)
+
+    status = termination_status(model)
+    pstatus = primal_status(model)
+
+    has_primal_point = pstatus == MOI.FEASIBLE_POINT || pstatus == MOI.NEARLY_FEASIBLE_POINT
+
+    Lambda_value = has_primal_point ? Matrix{Float64}(value.(Lambda)) : nothing
+
+    return (
+        Lambda=Lambda_value,
+        status=status,
+        primal_status=pstatus,
+        time_limit_hit=status == MOI.TIME_LIMIT,
+    )
 end

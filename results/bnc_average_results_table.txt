@@ -1,0 +1,23 @@
+\begin{table}[!ht]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.95}
+    \caption{Average BnC results over the UCI benchmark instances.}
+    \label{tab:bnc_uci_average_results}
+    \begin{tabular}{ll|rrrrr}
+    \hline
+    \textbf{Preprocessing} & \textbf{Variable fixing} & \textbf{Avg. final gap} & \textbf{Avg. nodes} & \textbf{Avg. fixed vars.} & \textbf{Avg. runtime} & \textbf{Solved} \\
+    \hline
+    raw & None & 0.010003 & 15501.4 & 0.0 & 2262.873 & 3 \\
+    raw & Dual & 0.010294 & 24216.0 & 83962.4 & 2103.663 & 3 \\
+    raw & Primal & 0.010287 & 29044.4 & 105786.3 & 2096.595 & 3 \\
+    normalized & None & 0.000002 & 3022.7 & 0.0 & 827.683 & 6 \\
+    normalized & Dual & 0.000000 & 3967.3 & 9748.3 & 200.477 & 7 \\
+    normalized & Primal & 0.000000 & 3965.9 & 9765.7 & 187.866 & 7 \\
+    standardized & None & 0.000673 & 6015.4 & 0.0 & 1196.481 & 5 \\
+    standardized & Dual & 0.000705 & 31423.3 & 113304.6 & 1590.080 & 4 \\
+    standardized & Primal & 0.000702 & 32160.1 & 121284.4 & 1589.981 & 4 \\
+    \hline
+    \end{tabular}
+\end{table}

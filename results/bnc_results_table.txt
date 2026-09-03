@@ -1,0 +1,77 @@
+\begin{table}[!ht]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.95}
+    \caption{BnC results on the UCI benchmark instances.}
+    \label{tab:bnc_uci_results}
+    \begin{tabular}{lll|rrrr}
+    \hline
+    \textbf{Instance} & \textbf{Preprocessing} & \textbf{Variable fixing} & \textbf{Final gap} & \textbf{Nodes} & \textbf{Fixed vars.} & \textbf{Runtime} \\
+    \hline
+    airfoil & raw & None & 0.000000 & 1741 & 0 & 1039.172 \\
+    airfoil & raw & Dual & 0.000000 & 1646 & 3522 & 129.275 \\
+    airfoil & raw & Primal & 0.000000 & 1658 & 3531 & 102.801 \\
+    airfoil & normalized & None & 0.000000 & 1147 & 0 & 227.092 \\
+    airfoil & normalized & Dual & 0.000000 & 1263 & 2952 & 24.308 \\
+    airfoil & normalized & Primal & 0.000000 & 1237 & 2972 & 23.972 \\
+    airfoil & standardized & None & 0.000000 & 3 & 0 & 0.650 \\
+    airfoil & standardized & Dual & 0.000000 & 45 & 1534 & 0.765 \\
+    airfoil & standardized & Primal & 0.000000 & 70 & 1571 & 0.915 \\
+    auto\_mpg & raw & None & 0.000000 & 1807 & 0 & 173.586 \\
+    auto\_mpg & raw & Dual & 0.000000 & 2544 & 7733 & 110.715 \\
+    auto\_mpg & raw & Primal & 0.000000 & 2533 & 7752 & 89.307 \\
+    auto\_mpg & normalized & None & 0.000000 & 403 & 0 & 41.970 \\
+    auto\_mpg & normalized & Dual & 0.000000 & 492 & 883 & 13.421 \\
+    auto\_mpg & normalized & Primal & 0.000000 & 492 & 883 & 13.631 \\
+    auto\_mpg & standardized & None & 0.000000 & 153 & 0 & 11.205 \\
+    auto\_mpg & standardized & Dual & 0.000000 & 196 & 639 & 3.615 \\
+    auto\_mpg & standardized & Primal & 0.000000 & 196 & 639 & 3.678 \\
+    concrete & raw & None & 0.000006 & 74775 & 0 & 3600.020 \\
+    concrete & raw & Dual & 0.000006 & 35561 & 187892 & 3600.111 \\
+    concrete & raw & Primal & 0.000006 & 58634 & 317715 & 3600.006 \\
+    concrete & normalized & None & 0.000000 & 3969 & 0 & 944.095 \\
+    concrete & normalized & Dual & 0.000000 & 4590 & 12289 & 288.449 \\
+    concrete & normalized & Primal & 0.000000 & 4592 & 12309 & 265.869 \\
+    concrete & standardized & None & 0.000000 & 4701 & 0 & 899.569 \\
+    concrete & standardized & Dual & 0.000000 & 6092 & 14371 & 213.404 \\
+    concrete & standardized & Primal & 0.000000 & 6167 & 14940 & 212.464 \\
+    forest\_fires & raw & None & 0.000000 & 2027 & 0 & 226.511 \\
+    forest\_fires & raw & Dual & 0.000000 & 3475 & 6980 & 85.315 \\
+    forest\_fires & raw & Primal & 0.000000 & 3417 & 6996 & 83.365 \\
+    forest\_fires & normalized & None & 0.000000 & 1803 & 0 & 283.915 \\
+    forest\_fires & normalized & Dual & 0.000000 & 2543 & 6673 & 135.353 \\
+    forest\_fires & normalized & Primal & 0.000000 & 2541 & 6677 & 133.504 \\
+    forest\_fires & standardized & None & 0.000000 & 1639 & 0 & 209.164 \\
+    forest\_fires & standardized & Dual & 0.000000 & 2375 & 5025 & 112.538 \\
+    forest\_fires & standardized & Primal & 0.000000 & 2367 & 5006 & 112.667 \\
+    wine\_red & raw & None & 0.000761 & 8958 & 0 & 3600.105 \\
+    wine\_red & raw & Dual & 0.000470 & 48693 & 159337 & 3600.070 \\
+    wine\_red & raw & Primal & 0.000464 & 50531 & 164356 & 3600.203 \\
+    wine\_red & normalized & None & 0.000016 & 11129 & 0 & 3600.074 \\
+    wine\_red & normalized & Dual & 0.000000 & 16169 & 31620 & 802.666 \\
+    wine\_red & normalized & Primal & 0.000000 & 16168 & 31647 & 749.726 \\
+    wine\_red & standardized & None & 0.000006 & 16019 & 0 & 3600.131 \\
+    wine\_red & standardized & Dual & 0.000003 & 95363 & 278687 & 3600.019 \\
+    wine\_red & standardized & Primal & 0.000003 & 93420 & 277063 & 3600.004 \\
+    wine\_white & raw & None & 0.000015 & 3508 & 0 & 3600.523 \\
+    wine\_white & raw & Dual & 0.000008 & 58404 & 156857 & 3600.075 \\
+    wine\_white & raw & Primal & 0.000007 & 67287 & 174441 & 3600.100 \\
+    wine\_white & normalized & None & 0.000000 & 531 & 0 & 460.055 \\
+    wine\_white & normalized & Dual & 0.000000 & 628 & 6817 & 33.512 \\
+    wine\_white & normalized & Primal & 0.000000 & 645 & 6868 & 34.287 \\
+    wine\_white & standardized & None & 0.000000 & 75 & 0 & 54.570 \\
+    wine\_white & standardized & Dual & 0.000002 & 90783 & 346840 & 3600.010 \\
+    wine\_white & standardized & Primal & 0.000002 & 96607 & 395303 & 3600.052 \\
+    yacht & raw & None & 0.069235 & 15694 & 0 & 3600.197 \\
+    yacht & raw & Dual & 0.071576 & 19189 & 65416 & 3600.081 \\
+    yacht & raw & Primal & 0.071533 & 19251 & 65713 & 3600.381 \\
+    yacht & normalized & None & 0.000000 & 2177 & 0 & 236.583 \\
+    yacht & normalized & Dual & 0.000000 & 2086 & 7004 & 105.629 \\
+    yacht & normalized & Primal & 0.000000 & 2086 & 7004 & 94.077 \\
+    yacht & standardized & None & 0.004702 & 19518 & 0 & 3600.074 \\
+    yacht & standardized & Dual & 0.004928 & 25109 & 146036 & 3600.205 \\
+    yacht & standardized & Primal & 0.004910 & 26294 & 154469 & 3600.084 \\
+    \hline
+    \end{tabular}
+\end{table}

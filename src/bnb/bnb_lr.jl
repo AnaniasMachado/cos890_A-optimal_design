@@ -233,17 +233,37 @@ function _bound_node_lr(A::AbstractMatrix, k::Int, F1::Vector{Int}, F0::Vector{I
     length(lr.x) == length(keep) || error("The LR solution has the wrong length.")
     length(lr.coefficients) == length(keep) || error("The LR coefficient vector has the wrong length.")
 
-    Lambda, tau, mu, nu = construct_dual(A_reduced, lr.x, k, fixed_one)
+    Lambda = nothing
+    tau = NaN
+    mu = zeros(Float64, length(keep))
+    nu = zeros(Float64, length(keep))
+    fixing_lb = -Inf
 
-    mu = Vector{Float64}(mu)
-    nu = Vector{Float64}(nu)
+    try
+        Lambda, tau, mu_raw, nu_raw =
+            construct_dual(A_reduced, lr.x, k, fixed_one)
 
-    length(mu) == length(keep) || error("construct_dual returned mu with the wrong length.")
-    length(nu) == length(keep) || error("construct_dual returned nu with the wrong length.")
+        mu = Vector{Float64}(mu_raw)
+        nu = Vector{Float64}(nu_raw)
 
-    fixing_lb = dual_objective(Lambda, tau, mu, nu, k) + sum(mu[fixed_one])
+        length(mu) == length(keep) ||
+            error("construct_dual returned mu with the wrong length.")
 
-    isfinite(fixing_lb) || error("The fixing-dual lower bound is not finite.")
+        length(nu) == length(keep) ||
+            error("construct_dual returned nu with the wrong length.")
+
+        fixing_lb =
+            dual_objective(Lambda, tau, mu, nu, k) +
+            sum(mu[fixed_one])
+
+        isfinite(fixing_lb) ||
+            error("The fixing-dual lower bound is not finite.")
+
+    catch err
+        if !(err isa PosDefException)
+            rethrow(err)
+        end
+    end
 
     lb = max(lr.lb, fixing_lb)
 

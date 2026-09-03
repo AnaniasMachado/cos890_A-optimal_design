@@ -1,0 +1,56 @@
+\begin{table}[!ht]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.95}
+    \caption{LR results on the UCI benchmark instances.}
+    \label{tab:lr_uci_results}
+    \begin{tabular}{lll|rrrr}
+    \hline
+    \textbf{Instance} & \textbf{Preprocessing} & \textbf{Variable fixing} & \textbf{Final gap} & \textbf{Nodes} & \textbf{Fixed vars.} & \textbf{Runtime} \\
+    \hline
+    airfoil & raw & None & 0.308355 & 166 & 0 & 3604.201 \\
+    airfoil & raw & Dual & 0.308355 & 168 & 16 & 3618.826 \\
+    airfoil & normalized & None & 0.000011 & 180 & 0 & 3608.544 \\
+    airfoil & normalized & Dual & 0.000000 & 1098 & 2542 & 44.929 \\
+    airfoil & standardized & None & 0.000000 & 3 & 0 & 67.530 \\
+    airfoil & standardized & Dual & 0.000000 & 10 & 1483 & 22.755 \\
+    auto\_mpg & raw & None & 0.046799 & 16693 & 0 & 3600.030 \\
+    auto\_mpg & raw & Dual & 0.046799 & 16467 & 134 & 3600.051 \\
+    auto\_mpg & normalized & None & 0.000000 & 661 & 0 & 560.448 \\
+    auto\_mpg & normalized & Dual & 0.000000 & 889 & 1230 & 32.014 \\
+    auto\_mpg & standardized & None & 0.000000 & 149 & 0 & 148.691 \\
+    auto\_mpg & standardized & Dual & 0.000000 & 199 & 564 & 7.637 \\
+    concrete & raw & None & 0.002530 & 1426 & 0 & 3600.476 \\
+    concrete & raw & Dual & 0.002530 & 1563 & 0 & 3600.935 \\
+    concrete & normalized & None & 0.000188 & 461 & 0 & 3602.080 \\
+    concrete & normalized & Dual & 0.000000 & 5639 & 13091 & 313.167 \\
+    concrete & standardized & None & 0.000024 & 393 & 0 & 3607.284 \\
+    concrete & standardized & Dual & 0.000000 & 6651 & 16554 & 349.635 \\
+    forest\_fires & raw & None & 0.003847 & 4358 & 0 & 3600.823 \\
+    forest\_fires & raw & Dual & 0.003847 & 6629 & 349 & 3600.267 \\
+    forest\_fires & normalized & None & 0.000000 & 2013 & 0 & 3380.822 \\
+    forest\_fires & normalized & Dual & 0.000000 & 2888 & 7689 & 257.410 \\
+    forest\_fires & standardized & None & 0.000002 & 1720 & 0 & 3601.645 \\
+    forest\_fires & standardized & Dual & 0.000000 & 1892 & 3478 & 171.666 \\
+    wine\_red & raw & None & 0.003103 & 77 & 0 & 3617.873 \\
+    wine\_red & raw & Dual & 0.003103 & 440 & 38966 & 3621.701 \\
+    wine\_red & normalized & None & 0.001026 & 142 & 0 & 3605.496 \\
+    wine\_red & normalized & Dual & 0.000000 & 19488 & 46770 & 2045.313 \\
+    wine\_red & standardized & None & 0.000020 & 115 & 0 & 3626.654 \\
+    wine\_red & standardized & Dual & 0.000012 & 24524 & 136656 & 3600.034 \\
+    wine\_white & raw & None & 0.026398 & 6 & 0 & 3627.333 \\
+    wine\_white & raw & Dual & 0.018919 & 6 & 4 & 3631.949 \\
+    wine\_white & normalized & None & 0.000161 & 7 & 0 & 3973.737 \\
+    wine\_white & normalized & Dual & 0.000000 & 2439 & 9280 & 850.888 \\
+    wine\_white & standardized & None & 0.000004 & 6 & 0 & 3631.107 \\
+    wine\_white & standardized & Dual & 0.000003 & 5354 & 55010 & 3600.648 \\
+    yacht & raw & None & 2416.781411 & 5440 & 0 & 3600.203 \\
+    yacht & raw & Dual & 2416.800786 & 5261 & 0 & 3600.011 \\
+    yacht & normalized & None & 0.000000 & 1993 & 0 & 1119.660 \\
+    yacht & normalized & Dual & 0.000000 & 2190 & 7010 & 96.926 \\
+    yacht & standardized & None & 0.005646 & 4583 & 0 & 3600.296 \\
+    yacht & standardized & Dual & 0.004973 & 16626 & 73600 & 3598.810 \\
+    \hline
+    \end{tabular}
+\end{table}

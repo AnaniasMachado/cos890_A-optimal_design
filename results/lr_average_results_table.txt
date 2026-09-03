@@ -1,0 +1,20 @@
+\begin{table}[!ht]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{0.95}
+    \caption{Average LR results over the UCI benchmark instances.}
+    \label{tab:lr_uci_average_results}
+    \begin{tabular}{ll|rrrrr}
+    \hline
+    \textbf{Preprocessing} & \textbf{Variable fixing} & \textbf{Avg. final gap} & \textbf{Avg. nodes} & \textbf{Avg. fixed vars.} & \textbf{Avg. runtime} & \textbf{Solved} \\
+    \hline
+    raw & None & 345.310349 & 4023.7 & 0.0 & 3607.277 & 0 \\
+    raw & Dual & 345.312049 & 4362.0 & 5638.4 & 3610.534 & 0 \\
+    normalized & None & 0.000198 & 779.6 & 0.0 & 2835.827 & 3 \\
+    normalized & Dual & 0.000000 & 4947.3 & 12516.0 & 520.092 & 7 \\
+    standardized & None & 0.000814 & 995.6 & 0.0 & 2611.887 & 2 \\
+    standardized & Dual & 0.000712 & 7893.7 & 41049.3 & 1621.598 & 4 \\
+    \hline
+    \end{tabular}
+\end{table}
